@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,15 @@ import (
 func main() {
 	var err error
 	var disk *os.File
+	version := "0.0.1"
+
+	versionFlag := flag.Bool("v", false, "display current version")
+	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("shell v%s\n", version)
+		return
+	}
 
 	if len(os.Args) > 1 {
 		disk, err = os.Open(os.Args[1])
