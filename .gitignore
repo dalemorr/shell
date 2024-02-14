@@ -1,5 +1,5 @@
 # Program
-shell
+build/*
 
 # VSCode
 .vscode/*
