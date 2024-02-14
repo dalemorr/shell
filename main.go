@@ -13,11 +13,18 @@ func main() {
 	var disk *os.File
 	version := "0.0.1"
 
-	versionFlag := flag.Bool("v", false, "display current version")
+	hFlag1 := flag.Bool("h", false, "display help message")
+	hFlag2 := flag.Bool("H", false, "display help message")
+	hFlag3 := flag.Bool("?", false, "display help message")
+	vFlag1 := flag.Bool("v", false, "display current version")
+	vFlag2 := flag.Bool("V", false, "display current version")
 	flag.Parse()
 
-	if *versionFlag {
+	if *vFlag1 || *vFlag2 {
 		fmt.Printf("shell v%s\n", version)
+		return
+	} else if *hFlag1 || *hFlag2 || *hFlag3 {
+		flag.CommandLine.Usage()
 		return
 	}
 
