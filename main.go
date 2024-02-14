@@ -43,7 +43,13 @@ func main() {
 		contentArray[i] = line[3:]
 	}
 
-	for _, line := range contentArray {
-		fmt.Printf("%s\n", line)
+	fmt.Println("XX:                1               2               3\n" +
+		"XX:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF")
+	for i, line := range contentArray {
+		if i < 0x10 {
+			fmt.Printf("0%X:%s\n", i, line)
+		} else {
+			fmt.Printf("%X:%s\n", i, line)
+		}
 	}
 }
