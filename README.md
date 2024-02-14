@@ -11,7 +11,7 @@ This is a program that will read data a Flintstone disk and print its contents.
 
 ## Build
 
-Go version 1.21.6 or later is expected for building this program. To build it, clone this repository to a local machine and run `go build -o build .`.
+Go version 1.21.6 or later is expected for building this program. To build it, clone this repository to a local machine and run `go build -o ./build/shell .`.
 
 ## Usage
 
