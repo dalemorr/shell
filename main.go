@@ -33,5 +33,7 @@ func main() {
 		contentArray[i] = line[3:]
 	}
 
-	fmt.Printf("%#v\n", contentArray)
+	for _, line := range contentArray {
+		fmt.Printf("%s\n", line)
+	}
 }
