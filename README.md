@@ -1,18 +1,47 @@
 # shell
 
-This is a program that will read data a Flintstone disk and print its contents.
+This is a program that can perform operations on a Flinstone disk.
 
 <details>
     <summary>Table of Contents</summary>
 
-- [Build](#build)
-- [Usage](#usage)
+- [shell](#shell)
+  - [Installation](#installation)
+  - [Usage](#usage)
 </details>
 
-## Build
+## Installation
 
-Go version 1.21.6 or later is expected for building this program. To build it, clone this repository to a local machine and run `go build -o ./build/shell .`.
+To install this program, run:
+
+```sh
+go get -u github.com/dalemorr/shell
+go install github.com/dalemorr/shell
+```
+
+To ensure that installation was successful, run:
+
+```sh
+shell -v
+```
+
+This should print the current version number. If instead an error message is displayed saying `Command 'shell' not found`, you may need to add GOROOT and GOPATH to your PATH. To do this on Linux, append the following to your `.bashrc`:
+
+```bash
+export GOPATH=$HOME/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+```
 
 ## Usage
 
-To run this program, run `./build/shell <file-name>` to print data from a file named "file-name" or simply `./build/shell` to print data from Stdin. `disk.txt` is provided as an example file. that may be passed in. Run `./build/shell -v` for version information or `./build/shell -h` for a help message.
+To see usage details, run:
+
+```sh
+shell -h
+```
+
+It will display the following message:
+
+```sh
+
+```
