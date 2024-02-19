@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+const (
+	AppName = "shell"
+)
+
 func main() {
 	var err error
 	var disk *os.File
