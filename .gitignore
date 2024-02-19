@@ -6,3 +6,6 @@ build/*
 
 # Build
 build/*
+
+# Data
+data/*
