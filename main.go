@@ -10,28 +10,52 @@ import (
 
 const (
 	AppName = "shell"
+	Version = "v0.1.0"
 )
 
 func main() {
 	var err error
-	var disk *os.File
-	version := "0.1.0"
 
+	// Handle args
 	hFlag1 := flag.Bool("h", false, "display help message")
 	hFlag2 := flag.Bool("H", false, "display help message")
 	hFlag3 := flag.Bool("?", false, "display help message")
 	vFlag1 := flag.Bool("v", false, "display current version")
 	vFlag2 := flag.Bool("V", false, "display current version")
+	printFlag := flag.Bool("print", false, "print raw contents of disk")
+	dirFlag := flag.Bool("dir", false, "list files on the disk")
+	// fileFlag := flag.String("f", "", "specify file name of disk")
 	flag.Parse()
 
-	if *vFlag1 || *vFlag2 {
-		fmt.Printf("shell v%s\n", version)
+	uniqueFlags := []*bool{hFlag1, hFlag2, hFlag3, vFlag1, vFlag2, printFlag, dirFlag}
+	hasUniqueFlag := false
+	for _, uFlag := range uniqueFlags {
+		if *uFlag {
+			if hasUniqueFlag {
+				flag.CommandLine.Usage()
+				return
+			} else {
+				hasUniqueFlag = true
+			}
+		}
+	}
+
+	hFlag := new(bool)
+	*hFlag = *hFlag1 || *hFlag2 || *hFlag3
+	vFlag := new(bool)
+	*vFlag = *vFlag1 || *vFlag2
+
+	if *vFlag {
+		fmt.Printf("%s %s\n", AppName, Version)
 		return
-	} else if *hFlag1 || *hFlag2 || *hFlag3 {
+	}
+	if *hFlag || !hasUniqueFlag {
 		flag.CommandLine.Usage()
 		return
 	}
 
+	// Read data
+	var disk *os.File
 	if len(os.Args) > 1 {
 		disk, err = os.Open(os.Args[1])
 		if err != nil {
@@ -54,9 +78,17 @@ func main() {
 		contentArray[i] = line[3:]
 	}
 
+	if *printFlag {
+		printFormattedContent(contentArray)
+	} else if *dirFlag {
+		fmt.Println("..welp")
+	}
+}
+
+func printFormattedContent(content []string) {
 	fmt.Println("XX:                1               2               3\n" +
 		"XX:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF")
-	for i, line := range contentArray {
+	for i, line := range content {
 		if i < 0x10 {
 			fmt.Printf("0%X:%s\n", i, line)
 		} else {
