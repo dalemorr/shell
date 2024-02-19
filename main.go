@@ -11,7 +11,7 @@ import (
 func main() {
 	var err error
 	var disk *os.File
-	version := "0.0.1"
+	version := "0.1.0"
 
 	hFlag1 := flag.Bool("h", false, "display help message")
 	hFlag2 := flag.Bool("H", false, "display help message")
