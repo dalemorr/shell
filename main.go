@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"io"
@@ -9,22 +10,32 @@ import (
 )
 
 const (
-	AppName = "shell"
-	Version = "v0.1.0"
+	AppName        = "shell"
+	Version        = "v0.1.0"
+	helpMessage    = "display help message"
+	versionMessage = "display current version"
+	printMessage   = "print raw contents of disk"
+	dirMessage     = "list files on the disk"
+	fileFlag       = "specify name of disk"
+	diskHeader     = "XX:                1               2               3\n" +
+		"XX:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
+	numRows    = 32
+	numColumns = 64
+	numBytes   = numRows * numColumns / 2
 )
 
 func main() {
 	var err error
 
 	// Handle args
-	hFlag1 := flag.Bool("h", false, "display help message")
-	hFlag2 := flag.Bool("H", false, "display help message")
-	hFlag3 := flag.Bool("?", false, "display help message")
-	vFlag1 := flag.Bool("v", false, "display current version")
-	vFlag2 := flag.Bool("V", false, "display current version")
-	printFlag := flag.Bool("print", false, "print raw contents of disk")
-	dirFlag := flag.Bool("dir", false, "list files on the disk")
-	// fileFlag := flag.String("f", "", "specify file name of disk")
+	hFlag1 := flag.Bool("h", false, helpMessage)
+	hFlag2 := flag.Bool("H", false, helpMessage)
+	hFlag3 := flag.Bool("?", false, helpMessage)
+	vFlag1 := flag.Bool("v", false, versionMessage)
+	vFlag2 := flag.Bool("V", false, versionMessage)
+	printFlag := flag.Bool("print", false, printMessage)
+	dirFlag := flag.Bool("dir", false, dirMessage)
+	fileFlag := flag.String("f", "", fileFlag)
 	flag.Parse()
 
 	uniqueFlags := []*bool{hFlag1, hFlag2, hFlag3, vFlag1, vFlag2, printFlag, dirFlag}
@@ -56,43 +67,64 @@ func main() {
 
 	// Read data
 	var disk *os.File
-	if len(os.Args) > 1 {
-		disk, err = os.Open(os.Args[1])
+	if *fileFlag == "" {
+		disk = os.Stdin
+	} else {
+		disk, err = os.Open(*fileFlag)
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 		defer disk.Close()
-	} else {
-		disk = os.Stdin
 	}
 
 	data, err := io.ReadAll(disk)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
-	content := string(data[:len(data)-1])
-	contentArray := strings.Split(content, "\n")
-	contentArray = contentArray[2:]
-	for i, line := range contentArray {
-		contentArray[i] = line[3:]
-	}
+	content := Tokenize(data)
 
 	if *printFlag {
-		printFormattedContent(contentArray)
+		PrintContent(content)
 	} else if *dirFlag {
-		fmt.Println("..welp")
+		fmt.Println("...welp")
 	}
 }
 
-func printFormattedContent(content []string) {
-	fmt.Println("XX:                1               2               3\n" +
-		"XX:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF")
+func Tokenize(data []byte) [][]byte {
+	var err error
+	content := strings.Split(string(data[:len(data)-1]), "\n")
+
+	// Strip header and line prefixes
+	content = content[2:]
 	for i, line := range content {
-		if i < 0x10 {
-			fmt.Printf("0%X:%s\n", i, line)
-		} else {
-			fmt.Printf("%X:%s\n", i, line)
+		content[i] = line[3:]
+	}
+
+	tokens := make([][]byte, numRows)
+	for i := 0; i < numRows; i++ {
+		tokens[i] = make([]byte, numBytes/numRows)
+	}
+
+	for i, s := range content {
+		tokens[i], err = hex.DecodeString(s)
+		if err != nil {
+			panic(err)
 		}
+	}
+
+	return tokens
+}
+
+func PrintContent(content [][]byte) {
+	fmt.Println(diskHeader)
+	for i, row := range content {
+		fmt.Printf("%02X:", i)
+		for _, chunk := range row {
+			fmt.Printf("%02X", chunk)
+		}
+		fmt.Println()
 	}
 }
