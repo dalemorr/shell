@@ -11,7 +11,7 @@ import (
 
 const (
 	AppName        = "shell"
-	Version        = "v0.1.0"
+	Version        = "v0.2.0"
 	helpMessage    = "display help message"
 	versionMessage = "display current version"
 	printMessage   = "print raw contents of disk"
