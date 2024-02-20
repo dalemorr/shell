@@ -89,7 +89,7 @@ func main() {
 	if *printFlag {
 		PrintContent(content)
 	} else if *dirFlag {
-		fmt.Println("...welp")
+		fmt.Println("Listing files...")
 	}
 }
 
