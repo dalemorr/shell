@@ -4,8 +4,5 @@ build/*
 # VSCode
 .vscode/*
 
-# Build
-build/*
-
 # Data
 data/*
