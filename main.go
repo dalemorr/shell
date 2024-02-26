@@ -10,14 +10,14 @@ import (
 )
 
 const (
-	AppName        = "shell"
-	Version        = "v0.2.0"
-	helpMessage    = "display help message"
-	versionMessage = "display current version"
-	printMessage   = "print raw contents of disk"
-	dirMessage     = "list files on the disk"
-	fileFlag       = "specify name of disk"
-	diskHeader     = "XX:                1               2               3\n" +
+	AppName      = "shell"
+	Version      = "v0.2.1"
+	helpUsage    = "display help message"
+	versionUsage = "display current version"
+	printUsage   = "print raw contents of disk"
+	dirUsage     = "list files on the disk"
+	fileUsage    = "specify name of disk"
+	diskHeader   = "XX:                1               2               3\n" +
 		"XX:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
 	numRows    = 32
 	numColumns = 64
@@ -28,49 +28,37 @@ func main() {
 	var err error
 
 	// Handle args
-	hFlag1 := flag.Bool("h", false, helpMessage)
-	hFlag2 := flag.Bool("H", false, helpMessage)
-	hFlag3 := flag.Bool("?", false, helpMessage)
-	vFlag1 := flag.Bool("v", false, versionMessage)
-	vFlag2 := flag.Bool("V", false, versionMessage)
-	printFlag := flag.Bool("print", false, printMessage)
-	dirFlag := flag.Bool("dir", false, dirMessage)
-	fileFlag := flag.String("f", "", fileFlag)
+	var isHelp bool
+	var isVersion bool
+	var isPrint bool
+	var isDir bool
+	var fileName string
+
+	flag.BoolVar(&isHelp, "h", false, helpUsage)
+	flag.BoolVar(&isHelp, "H", false, helpUsage)
+	flag.BoolVar(&isHelp, "?", false, helpUsage)
+	flag.BoolVar(&isVersion, "v", false, versionUsage)
+	flag.BoolVar(&isVersion, "V", false, versionUsage)
+	flag.BoolVar(&isPrint, "print", false, printUsage)
+	flag.BoolVar(&isDir, "dir", false, dirUsage)
+	flag.StringVar(&fileName, "f", "", fileUsage)
 	flag.Parse()
 
-	uniqueFlags := []*bool{hFlag1, hFlag2, hFlag3, vFlag1, vFlag2, printFlag, dirFlag}
-	hasUniqueFlag := false
-	for _, uFlag := range uniqueFlags {
-		if *uFlag {
-			if hasUniqueFlag {
-				flag.CommandLine.Usage()
-				return
-			} else {
-				hasUniqueFlag = true
-			}
-		}
-	}
-
-	hFlag := new(bool)
-	*hFlag = *hFlag1 || *hFlag2 || *hFlag3
-	vFlag := new(bool)
-	*vFlag = *vFlag1 || *vFlag2
-
-	if *vFlag {
+	if isVersion {
 		fmt.Printf("%s %s\n", AppName, Version)
 		return
 	}
-	if *hFlag || !hasUniqueFlag {
+	if isHelp {
 		flag.CommandLine.Usage()
 		return
 	}
 
 	// Read data
 	var disk *os.File
-	if *fileFlag == "" {
+	if fileName == "" {
 		disk = os.Stdin
 	} else {
-		disk, err = os.Open(*fileFlag)
+		disk, err = os.Open(fileName)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -84,16 +72,16 @@ func main() {
 		return
 	}
 
-	content := Tokenize(data)
+	content := tokenize(data)
 
-	if *printFlag {
-		PrintContent(content)
-	} else if *dirFlag {
+	if isPrint {
+		printContent(content)
+	} else if isDir {
 		fmt.Println("Listing files...")
 	}
 }
 
-func Tokenize(data []byte) [][]byte {
+func tokenize(data []byte) [][]byte {
 	var err error
 	content := strings.Split(string(data[:len(data)-1]), "\n")
 
@@ -118,7 +106,7 @@ func Tokenize(data []byte) [][]byte {
 	return tokens
 }
 
-func PrintContent(content [][]byte) {
+func printContent(content [][]byte) {
 	fmt.Println(diskHeader)
 	for i, row := range content {
 		fmt.Printf("%02X:", i)
