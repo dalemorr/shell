@@ -97,7 +97,7 @@ func main() {
 	if isPrint {
 		printDisk(content)
 	} else if isDir {
-		fmt.Println("Listing files...")
+		printFiles(content)
 	}
 }
 
@@ -135,4 +135,8 @@ func printDisk(content [][]byte) {
 		}
 		fmt.Println()
 	}
+}
+
+func printFiles(content [][]byte) {
+	fmt.Println("Listing files...")
 }
