@@ -27,7 +27,7 @@ const (
 func main() {
 	var err error
 
-	// Handle args
+	// Parse command
 	var isHelp bool
 	var isVersion bool
 	var isPrint bool
@@ -44,12 +44,32 @@ func main() {
 	flag.StringVar(&fileName, "f", "", fileUsage)
 	flag.Parse()
 
+	countUniques := 0
+	if isHelp {
+		countUniques++
+	}
 	if isVersion {
-		fmt.Printf("%s %s\n", AppName, Version)
+		countUniques++
+	}
+	if isPrint {
+		countUniques++
+	}
+	if isDir {
+		countUniques++
+	}
+
+	if (countUniques != 1) || ((isHelp || isVersion) && fileName != "") {
+		flag.CommandLine.Usage()
 		return
 	}
+
+	// Version and help messages
 	if isHelp {
 		flag.CommandLine.Usage()
+		return
+	}
+	if isVersion {
+		fmt.Printf("%s %s\n", AppName, Version)
 		return
 	}
 
@@ -75,7 +95,7 @@ func main() {
 	content := tokenize(data)
 
 	if isPrint {
-		printContent(content)
+		printDisk(content)
 	} else if isDir {
 		fmt.Println("Listing files...")
 	}
@@ -106,7 +126,7 @@ func tokenize(data []byte) [][]byte {
 	return tokens
 }
 
-func printContent(content [][]byte) {
+func printDisk(content [][]byte) {
 	fmt.Println(diskHeader)
 	for i, row := range content {
 		fmt.Printf("%02X:", i)
