@@ -1,10 +1,8 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 )
@@ -17,11 +15,6 @@ const (
 	printUsage   = "print raw contents of disk"
 	dirUsage     = "list files on disk"
 	fileUsage    = "specify name of disk"
-	diskHeader   = "XX:                1               2               3\n" +
-		"XX:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
-	numRows    = 32
-	numColumns = 64
-	numNibbles = numRows * numColumns
 )
 
 func main() {
@@ -72,35 +65,23 @@ func main() {
 	}
 
 	// Read data
-	var disk *os.File
+	d := new(disk)
 	if fileName == "" {
-		disk = os.Stdin
+		d.file = os.Stdin
 	} else {
-		disk, err = os.Open(fileName)
+		d.file, err = os.Open(fileName)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		defer disk.Close()
+		defer d.file.Close()
 	}
-
-	data, err := io.ReadAll(disk)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if !isValid(data) {
-		fmt.Println(errors.New("invalid disk"))
-		return
-	}
-	content := tokenize(data)
 
 	// Print requested data
 	if isPrint {
-		printDisk(content)
+		d.printRaw()
 	} else if isDir {
-		printFiles(content)
+		d.printFiles()
 	}
 }
 
@@ -131,50 +112,4 @@ func tokenize(data []byte) [][]byte {
 	}
 
 	return tokens
-}
-
-func printDisk(content [][]byte) {
-	fmt.Println(diskHeader)
-	for i, row := range content {
-		fmt.Printf("%02X:", i)
-		for _, nibble := range row {
-			fmt.Printf("%X", nibble)
-		}
-		fmt.Println()
-	}
-}
-
-func printFiles(content [][]byte) {
-	fmt.Println("Listing files...")
-}
-
-func decodeOctal(s string) ([]byte, error) {
-	if !isOctal(s) {
-		return []byte{}, errors.New("invalid octal string")
-	}
-
-	str := strings.ToLower(s)
-	data := make([]byte, len(s))
-
-	for i, char := range str {
-		if char >= 0x30 && char <= 0x39 {
-			data[i] = byte(char - 0x30)
-		} else if char >= 0x61 && char <= 0x66 {
-			data[i] = byte(char - 0x57)
-		}
-	}
-
-	return data, nil
-}
-
-func isOctal(s string) bool {
-	str := strings.ToLower(s)
-
-	for _, char := range str {
-		if !((char >= 0x30 && char <= 0x39) || (char >= 0x61 && char <= 0x66)) {
-			return false
-		}
-	}
-
-	return true
 }
