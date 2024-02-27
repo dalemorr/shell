@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 )
 
 const (
@@ -67,49 +66,30 @@ func main() {
 	// Read data
 	d := new(disk)
 	if fileName == "" {
-		d.file = os.Stdin
-	} else {
-		d.file, err = os.Open(fileName)
+		err = d.init(os.Stdin)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
+	} else {
+		file, err := os.Open(fileName)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		err = d.init(file)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
 		defer d.file.Close()
 	}
 
 	// Print requested data
 	if isPrint {
-		d.printRaw()
+		d.printFormatted()
 	} else if isDir {
 		d.printFiles()
 	}
-}
-
-func isValid(data []byte) bool {
-	return true
-}
-
-func tokenize(data []byte) [][]byte {
-	var err error
-	content := strings.Split(string(data[:len(data)-1]), "\n")
-
-	// Strip header and line prefixes
-	content = content[2:]
-	for i, line := range content {
-		content[i] = line[3:]
-	}
-
-	tokens := make([][]byte, numRows)
-	for i := 0; i < numRows; i++ {
-		tokens[i] = make([]byte, numColumns)
-	}
-
-	for i, line := range content {
-		tokens[i], err = decodeOctal(line)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	return tokens
 }
