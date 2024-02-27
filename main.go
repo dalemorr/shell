@@ -56,7 +56,7 @@ func main() {
 		countUniques++
 	}
 
-	if (countUniques != 1) || ((isHelp || isVersion) && fileName != "") || ((isPrint || isDir) && fileName == "") {
+	if (countUniques != 1) || ((isHelp || isVersion) && fileName != "") {
 		flag.CommandLine.Usage()
 		return
 	}
@@ -90,6 +90,10 @@ func main() {
 		return
 	}
 
+	if !isValid(data) {
+		fmt.Println(errors.New("invalid disk"))
+		return
+	}
 	content := tokenize(data)
 
 	// Print requested data
@@ -98,6 +102,10 @@ func main() {
 	} else if isDir {
 		printFiles(content)
 	}
+}
+
+func isValid(data []byte) bool {
+	return true
 }
 
 func tokenize(data []byte) [][]byte {
