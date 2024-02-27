@@ -56,7 +56,7 @@ func main() {
 		countUniques++
 	}
 
-	if (countUniques != 1) || ((isHelp || isVersion) && fileName != "") {
+	if (countUniques != 1) || ((isHelp || isVersion) && fileName != "") || ((isPrint || isDir) && fileName == "") {
 		flag.CommandLine.Usage()
 		return
 	}
@@ -91,8 +91,6 @@ func main() {
 	}
 
 	content := tokenize(data)
-
-	fmt.Printf("%d\n", content[9][2])
 
 	// Print requested data
 	if isPrint {
@@ -147,13 +145,14 @@ func decodeOctal(s string) ([]byte, error) {
 		return []byte{}, errors.New("invalid octal string")
 	}
 
+	str := strings.ToLower(s)
 	data := make([]byte, len(s))
 
-	for i, char := range s {
+	for i, char := range str {
 		if char >= 0x30 && char <= 0x39 {
 			data[i] = byte(char - 0x30)
 		} else if char >= 0x61 && char <= 0x66 {
-			data[i] = byte(char - 0x51)
+			data[i] = byte(char - 0x57)
 		}
 	}
 
