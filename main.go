@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -15,13 +15,13 @@ const (
 	helpUsage    = "display help message"
 	versionUsage = "display current version"
 	printUsage   = "print raw contents of disk"
-	dirUsage     = "list files on the disk"
+	dirUsage     = "list files on disk"
 	fileUsage    = "specify name of disk"
 	diskHeader   = "XX:                1               2               3\n" +
 		"XX:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
 	numRows    = 32
 	numColumns = 64
-	numBytes   = numRows * numColumns / 2
+	numNibbles = numRows * numColumns
 )
 
 func main() {
@@ -35,10 +35,8 @@ func main() {
 	var fileName string
 
 	flag.BoolVar(&isHelp, "h", false, helpUsage)
-	flag.BoolVar(&isHelp, "H", false, helpUsage)
 	flag.BoolVar(&isHelp, "?", false, helpUsage)
 	flag.BoolVar(&isVersion, "v", false, versionUsage)
-	flag.BoolVar(&isVersion, "V", false, versionUsage)
 	flag.BoolVar(&isPrint, "print", false, printUsage)
 	flag.BoolVar(&isDir, "dir", false, dirUsage)
 	flag.StringVar(&fileName, "f", "", fileUsage)
@@ -94,6 +92,9 @@ func main() {
 
 	content := tokenize(data)
 
+	fmt.Printf("%d\n", content[9][2])
+
+	// Print requested data
 	if isPrint {
 		printDisk(content)
 	} else if isDir {
@@ -113,11 +114,11 @@ func tokenize(data []byte) [][]byte {
 
 	tokens := make([][]byte, numRows)
 	for i := 0; i < numRows; i++ {
-		tokens[i] = make([]byte, numBytes/numRows)
+		tokens[i] = make([]byte, numColumns)
 	}
 
-	for i, s := range content {
-		tokens[i], err = hex.DecodeString(s)
+	for i, line := range content {
+		tokens[i], err = decodeOctal(line)
 		if err != nil {
 			panic(err)
 		}
@@ -130,8 +131,8 @@ func printDisk(content [][]byte) {
 	fmt.Println(diskHeader)
 	for i, row := range content {
 		fmt.Printf("%02X:", i)
-		for _, chunk := range row {
-			fmt.Printf("%02X", chunk)
+		for _, nibble := range row {
+			fmt.Printf("%X", nibble)
 		}
 		fmt.Println()
 	}
@@ -139,4 +140,34 @@ func printDisk(content [][]byte) {
 
 func printFiles(content [][]byte) {
 	fmt.Println("Listing files...")
+}
+
+func decodeOctal(s string) ([]byte, error) {
+	if !isOctal(s) {
+		return []byte{}, errors.New("invalid octal string")
+	}
+
+	data := make([]byte, len(s))
+
+	for i, char := range s {
+		if char >= 0x30 && char <= 0x39 {
+			data[i] = byte(char - 0x30)
+		} else if char >= 0x61 && char <= 0x66 {
+			data[i] = byte(char - 0x51)
+		}
+	}
+
+	return data, nil
+}
+
+func isOctal(s string) bool {
+	str := strings.ToLower(s)
+
+	for _, char := range str {
+		if !((char >= 0x30 && char <= 0x39) || (char >= 0x61 && char <= 0x66)) {
+			return false
+		}
+	}
+
+	return true
 }
