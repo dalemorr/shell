@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -12,7 +13,8 @@ const (
 	helpUsage    = "display help message"
 	versionUsage = "display current version"
 	printUsage   = "print raw contents of disk"
-	dirUsage     = "list files on disk"
+	dirUsage     = "print files on disk"
+	nameUsage    = "print name of disk"
 	fileUsage    = "specify name of disk"
 )
 
@@ -24,6 +26,7 @@ func main() {
 	var isVersion bool
 	var isPrint bool
 	var isDir bool
+	var isName bool
 	var fileName string
 
 	flag.BoolVar(&isHelp, "h", false, helpUsage)
@@ -31,6 +34,7 @@ func main() {
 	flag.BoolVar(&isVersion, "v", false, versionUsage)
 	flag.BoolVar(&isPrint, "print", false, printUsage)
 	flag.BoolVar(&isDir, "dir", false, dirUsage)
+	flag.BoolVar(&isName, "name", false, nameUsage)
 	flag.StringVar(&fileName, "f", "", fileUsage)
 	flag.Parse()
 
@@ -45,6 +49,9 @@ func main() {
 		countUniques++
 	}
 	if isDir {
+		countUniques++
+	}
+	if isName {
 		countUniques++
 	}
 
@@ -91,5 +98,9 @@ func main() {
 		d.printFormatted()
 	} else if isDir {
 		d.printFiles()
+	} else if isName {
+		d.printVolumeName()
+	} else {
+		panic(errors.New("an unknown error has occurred"))
 	}
 }
