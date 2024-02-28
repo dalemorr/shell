@@ -57,19 +57,26 @@ type fileData struct {
 func (d *disk) init(file *os.File) error {
 	var err error
 
-	// Read data
 	d.file = file
 	data, err := io.ReadAll(d.file)
 	if err != nil {
 		return err
 	}
 
-	// Validate data
 	if !isValid(data) {
 		return errors.New(diskErrorMessage)
 	}
 
-	// Initialize fields
+	d.initRaw(data)
+	d.initAvailable()
+	d.initBad()
+	d.initHeader()
+	d.initVolumeName()
+
+	return nil
+}
+
+func (d *disk) initRaw(data []byte) {
 	content := strings.Split(string(data[:len(data)-1]), "\n")
 	content = content[2:]
 	for i, line := range content {
@@ -79,8 +86,9 @@ func (d *disk) init(file *os.File) error {
 	d.raw = content
 	d.root = new(root)
 	d.root.index = 0
+}
 
-	// Initialize available
+func (d *disk) initAvailable() {
 	temp, err := hex.DecodeString(d.raw[0][1:3])
 	if err != nil {
 		panic(err)
@@ -109,8 +117,13 @@ func (d *disk) init(file *os.File) error {
 	} else {
 		d.root.available = nil
 	}
+}
 
-	// Initialize bad
+func (d *disk) initBad() {
+	var err error
+	var temp []byte
+	var index uint8
+
 	temp, err = hex.DecodeString(d.raw[0][3:5])
 	if err != nil {
 		panic(err)
@@ -139,8 +152,13 @@ func (d *disk) init(file *os.File) error {
 	} else {
 		d.root.available = nil
 	}
+}
 
-	// Initialize files
+func (d *disk) initHeader() {
+	var err error
+	var temp []byte
+	var index, index1 uint8
+
 	temp, err = hex.DecodeString(d.raw[0][5:7])
 	if err != nil {
 		panic(err)
@@ -156,7 +174,7 @@ func (d *disk) init(file *os.File) error {
 		if err != nil {
 			panic(err)
 		}
-		index1 := temp[0]
+		index1 = temp[0]
 
 		if index1 != 0 {
 			currentHeader.data = new(fileData)
@@ -211,15 +229,17 @@ func (d *disk) init(file *os.File) error {
 	} else {
 		d.root.available = nil
 	}
+}
 
-	// Initialize volume name
+func (d *disk) initVolumeName() {
+	var err error
+	var temp []byte
+
 	temp, err = hex.DecodeString(d.raw[0][7 : numColumns-1])
 	if err != nil {
 		panic(err)
 	}
 	d.root.volumeName = string(temp)
-
-	return nil
 }
 
 func (d *disk) printFormatted() {
