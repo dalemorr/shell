@@ -39,9 +39,3 @@ To see usage details, run:
 ```sh
 shell -h
 ```
-
-It will display the following message:
-
-```sh
-
-```
