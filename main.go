@@ -16,6 +16,7 @@ const (
 	printUsage   = "print raw contents of disk"
 	dirUsage     = "print files on disk"
 	nameUsage    = "print name of disk"
+	catUsage     = "print contents of specified file"
 	fileUsage    = "specify name of disk"
 )
 
@@ -29,6 +30,7 @@ func main() {
 	var isPrint bool
 	var isDir bool
 	var isName bool
+	var catFileName string
 	var fileName string
 
 	flag.BoolVar(&isHelp, "h", false, helpUsage)
@@ -37,6 +39,7 @@ func main() {
 	flag.BoolVar(&isPrint, "print", false, printUsage)
 	flag.BoolVar(&isDir, "dir", false, dirUsage)
 	flag.BoolVar(&isName, "name", false, nameUsage)
+	flag.StringVar(&catFileName, "cat", "", catUsage)
 	flag.StringVar(&fileName, "f", "", fileUsage)
 	flag.Parse()
 
@@ -54,6 +57,9 @@ func main() {
 		countUniques++
 	}
 	if isName {
+		countUniques++
+	}
+	if catFileName != "" {
 		countUniques++
 	}
 
@@ -99,6 +105,8 @@ func main() {
 		d.printFiles()
 	} else if isName {
 		d.printVolumeName()
+	} else if catFileName != "" {
+		d.printContent(catFileName, errorLogger)
 	} else {
 		panic(errors.New("an unknown error has occurred"))
 	}

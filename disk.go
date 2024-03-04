@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strings"
 )
@@ -20,37 +21,37 @@ const (
 type disk struct {
 	file *os.File
 	raw  []string
-	root *root
+	root *rootCluster
 }
 
-type root struct {
+type rootCluster struct {
 	index      uint8
-	available  *empty
-	bad        *bad
-	header     *fileHeader
+	available  *emptyCluster
+	bad        *badCluster
+	header     *fileHeaderCluster
 	volumeName string
 }
 
-type empty struct {
+type emptyCluster struct {
 	index uint8
-	next  *empty
+	next  *emptyCluster
 }
 
-type bad struct {
+type badCluster struct {
 	index uint8
-	next  *bad
+	next  *badCluster
 }
 
-type fileHeader struct {
+type fileHeaderCluster struct {
 	index uint8
-	next  *fileHeader
-	data  *fileData
+	next  *fileHeaderCluster
+	data  *fileDataCluster
 	name  string
 }
 
-type fileData struct {
+type fileDataCluster struct {
 	index uint8
-	next  *fileData
+	next  *fileDataCluster
 	data  string
 }
 
@@ -84,7 +85,7 @@ func (d *disk) initRaw(data []byte) {
 	}
 
 	d.raw = content
-	d.root = new(root)
+	d.root = new(rootCluster)
 	d.root.index = 0
 }
 
@@ -96,7 +97,7 @@ func (d *disk) initAvailable() {
 	index := temp[0]
 
 	if index != 0 {
-		d.root.available = &empty{index, nil}
+		d.root.available = &emptyCluster{index, nil}
 		currentAvailable := d.root.available
 		temp, err := hex.DecodeString(d.raw[index][1:3])
 		if err != nil {
@@ -105,7 +106,7 @@ func (d *disk) initAvailable() {
 		index := temp[0]
 
 		for index != 0 {
-			currentAvailable.next = &empty{index, nil}
+			currentAvailable.next = &emptyCluster{index, nil}
 			currentAvailable = currentAvailable.next
 
 			temp, err = hex.DecodeString(d.raw[index][1:3])
@@ -131,7 +132,7 @@ func (d *disk) initBad() {
 	index = temp[0]
 
 	if index != 0 {
-		d.root.bad = &bad{index, nil}
+		d.root.bad = &badCluster{index, nil}
 		currentBad := d.root.bad
 		temp, err := hex.DecodeString(d.raw[index][1:3])
 		if err != nil {
@@ -140,7 +141,7 @@ func (d *disk) initBad() {
 		index := temp[0]
 
 		for index != 0 {
-			currentBad.next = &bad{index, nil}
+			currentBad.next = &badCluster{index, nil}
 			currentBad = currentBad.next
 
 			temp, err = hex.DecodeString(d.raw[index][1:3])
@@ -166,7 +167,7 @@ func (d *disk) initHeader() {
 	index = temp[0]
 
 	if index != 0 {
-		d.root.header = new(fileHeader)
+		d.root.header = new(fileHeaderCluster)
 		d.root.header.index = 0
 		currentHeader := d.root.header
 
@@ -177,7 +178,7 @@ func (d *disk) initHeader() {
 		index1 = temp[0]
 
 		if index1 != 0 {
-			currentHeader.data = new(fileData)
+			currentHeader.data = new(fileDataCluster)
 			currentData := currentHeader.data
 
 			temp, err := hex.DecodeString(d.raw[index1][1:3])
@@ -187,7 +188,7 @@ func (d *disk) initHeader() {
 			index1 := temp[0]
 
 			for index1 != 0 {
-				currentData.next = new(fileData)
+				currentData.next = new(fileDataCluster)
 				currentData.index = index1
 				temp, err = hex.DecodeString(d.raw[index][3 : numColumns-1])
 				if err != nil {
@@ -211,7 +212,7 @@ func (d *disk) initHeader() {
 		index := temp[0]
 
 		for index != 0 {
-			currentHeader.next = new(fileHeader)
+			currentHeader.next = new(fileHeaderCluster)
 			currentHeader.index = index
 			temp, err = hex.DecodeString(d.raw[index][3 : numColumns-1])
 			if err != nil {
@@ -258,6 +259,25 @@ func (d *disk) printFiles() {
 	for currentHeader != nil {
 		fmt.Println(currentHeader.name)
 		currentHeader = currentHeader.next
+	}
+}
+
+func (d *disk) printContent(fileName string, logger *log.Logger) {
+	currentHeader := d.root.header
+
+	for currentHeader != nil && currentHeader.name != fileName {
+		currentHeader = currentHeader.next
+	}
+
+	if currentHeader == nil {
+		logger.Println(errors.New("no such file or directory"))
+		return
+	}
+
+	currentData := currentHeader.data
+
+	for currentData != nil {
+		fmt.Print(currentData.data)
 	}
 }
 
