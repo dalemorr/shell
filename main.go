@@ -10,7 +10,7 @@ import (
 
 const (
 	AppName      = "shell"
-	Version      = "v0.2.2"
+	Version      = "v0.3.0"
 	helpUsage    = "display help message"
 	versionUsage = "display current version"
 	printUsage   = "print raw contents of disk"
@@ -25,55 +25,54 @@ func main() {
 	errorLogger := log.New(os.Stderr, "", 0)
 
 	// Parse command
-	var isHelp bool
-	var isVersion bool
-	var isPrint bool
-	var isDir bool
-	var isName bool
+	const (
+		isHelp = iota
+		isVersion
+		isPrint
+		isDir
+		isName
+		isCat
+	)
+
+	boolArgs := make([]bool, 6)
+
 	var catFileName string
 	var fileName string
 
-	flag.BoolVar(&isHelp, "h", false, helpUsage)
-	flag.BoolVar(&isHelp, "?", false, helpUsage)
-	flag.BoolVar(&isVersion, "v", false, versionUsage)
-	flag.BoolVar(&isPrint, "print", false, printUsage)
-	flag.BoolVar(&isDir, "dir", false, dirUsage)
-	flag.BoolVar(&isName, "name", false, nameUsage)
+	flag.BoolVar(&boolArgs[isHelp], "h", false, helpUsage)
+	flag.BoolVar(&boolArgs[isHelp], "?", false, helpUsage)
+	flag.BoolVar(&boolArgs[isVersion], "v", false, versionUsage)
+	flag.BoolVar(&boolArgs[isPrint], "print", false, printUsage)
+	flag.BoolVar(&boolArgs[isDir], "dir", false, dirUsage)
+	flag.BoolVar(&boolArgs[isName], "name", false, nameUsage)
 	flag.StringVar(&catFileName, "cat", "", catUsage)
 	flag.StringVar(&fileName, "f", "", fileUsage)
 	flag.Parse()
 
-	countUniques := 0
-	if isHelp {
-		countUniques++
-	}
-	if isVersion {
-		countUniques++
-	}
-	if isPrint {
-		countUniques++
-	}
-	if isDir {
-		countUniques++
-	}
-	if isName {
-		countUniques++
-	}
 	if catFileName != "" {
-		countUniques++
+		boolArgs[isCat] = true
 	}
 
-	if (countUniques != 1) || ((isHelp || isVersion) && fileName != "") {
+	countUniques := 0
+	var uniqueIndex int
+	for i, arg := range boolArgs {
+		if arg {
+			uniqueIndex = i
+			countUniques++
+		}
+	}
+
+	if (countUniques != 1) || ((boolArgs[isHelp] || boolArgs[isVersion]) && fileName != "") {
 		flag.CommandLine.Usage()
 		return
 	}
 
 	// Version and help messages
-	if isHelp {
+	if boolArgs[isHelp] {
 		flag.CommandLine.Usage()
 		return
 	}
-	if isVersion {
+	if boolArgs[isVersion] {
 		fmt.Printf("%s %s\n", AppName, Version)
 		return
 	}
@@ -99,15 +98,16 @@ func main() {
 	}
 
 	// Print requested data
-	if isPrint {
+	switch uniqueIndex {
+	case isPrint:
 		d.printFormatted()
-	} else if isDir {
+	case isDir:
 		d.printFiles()
-	} else if isName {
+	case isName:
 		d.printVolumeName()
-	} else if catFileName != "" {
+	case isCat:
 		d.printContent(catFileName, errorLogger)
-	} else {
+	default:
 		panic(errors.New("an unknown error has occurred"))
 	}
 }
