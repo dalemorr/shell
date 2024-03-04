@@ -10,7 +10,7 @@ import (
 
 const (
 	AppName      = "shell"
-	Version      = "v0.2.1"
+	Version      = "v0.2.2"
 	helpUsage    = "display help message"
 	versionUsage = "display current version"
 	printUsage   = "print raw contents of disk"
