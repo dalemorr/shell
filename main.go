@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -20,6 +21,7 @@ const (
 
 func main() {
 	var err error
+	errorLogger := log.New(os.Stderr, "", 0)
 
 	// Parse command
 	var isHelp bool
@@ -75,19 +77,16 @@ func main() {
 	if fileName == "" {
 		err = d.init(os.Stdin)
 		if err != nil {
-			fmt.Println(err)
-			return
+			errorLogger.Fatalln(err)
 		}
 	} else {
 		file, err := os.Open(fileName)
 		if err != nil {
-			fmt.Println(err)
-			return
+			errorLogger.Fatalln(err)
 		}
 		err = d.init(file)
 		if err != nil {
-			fmt.Println(err)
-			return
+			errorLogger.Fatalln(err)
 		}
 
 		defer d.file.Close()
