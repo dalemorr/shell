@@ -3,6 +3,3 @@ build/*
 
 # VSCode
 .vscode/*
-
-# Data
-data/*
