@@ -157,75 +157,75 @@ func (d *disk) initBad() {
 
 func (d *disk) initHeader() {
 	var err error
-	var temp []byte
+	var indexBytes []byte
 	var index, index1 uint8
 
-	temp, err = hex.DecodeString(d.raw[0][5:7])
+	indexBytes, err = hex.DecodeString(d.raw[0][5:7])
 	if err != nil {
 		panic(err)
 	}
-	index = temp[0]
+	index = indexBytes[0]
 
 	if index != 0 {
 		d.root.header = new(fileHeaderCluster)
 		d.root.header.index = 0
 		currentHeader := d.root.header
 
-		temp, err = hex.DecodeString(d.raw[index][3:5])
+		indexBytes, err = hex.DecodeString(d.raw[index][3:5])
 		if err != nil {
 			panic(err)
 		}
-		index1 = temp[0]
+		index1 = indexBytes[0]
 
 		if index1 != 0 {
 			currentHeader.data = new(fileDataCluster)
 			currentData := currentHeader.data
 
-			temp, err := hex.DecodeString(d.raw[index1][1:3])
+			indexBytes, err := hex.DecodeString(d.raw[index1][1:3])
 			if err != nil {
 				panic(err)
 			}
-			index1 := temp[0]
+			index1 := indexBytes[0]
 
 			for index1 != 0 {
 				currentData.next = new(fileDataCluster)
 				currentData.index = index1
-				temp, err = hex.DecodeString(d.raw[index][3 : numColumns-1])
+				indexBytes, err = hex.DecodeString(d.raw[index][3 : numColumns-1])
 				if err != nil {
 					panic(err)
 				}
-				currentData.data = string(temp)
+				currentData.data = string(indexBytes)
 
 				currentData = currentData.next
-				temp, err = hex.DecodeString(d.raw[index1][1:3])
+				indexBytes, err = hex.DecodeString(d.raw[index1][1:3])
 				if err != nil {
 					panic(err)
 				}
-				index = temp[0]
+				index = indexBytes[0]
 			}
 		}
 
-		temp, err := hex.DecodeString(d.raw[index][1:3])
+		indexBytes, err := hex.DecodeString(d.raw[index][1:3])
 		if err != nil {
 			panic(err)
 		}
-		index := temp[0]
+		index := indexBytes[0]
 
 		for index != 0 {
 			currentHeader.next = new(fileHeaderCluster)
 			currentHeader.index = index
-			temp, err = hex.DecodeString(d.raw[index][3 : numColumns-1])
+			indexBytes, err = hex.DecodeString(d.raw[index][3 : numColumns-1])
 			if err != nil {
 				panic(err)
 			}
-			currentHeader.name = string(temp)
+			currentHeader.name = string(indexBytes)
 
 			currentHeader = currentHeader.next
-			temp, err = hex.DecodeString(d.raw[index][1:3])
+			indexBytes, err = hex.DecodeString(d.raw[index][1:3])
 			if err != nil {
 				panic(err)
 			}
-			index = temp[0]
+			index = indexBytes[0]
 		}
 	} else {
 		d.root.available = nil
